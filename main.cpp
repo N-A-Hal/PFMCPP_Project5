@@ -108,32 +108,30 @@ write 3 UDTs below that EACH have:
  */
 
 #include <iostream>
-#include <vector>
 #include <string>
-#include <unordered_set>
 
 struct Loan
 {
     double loanAmount;
     double interestRateInPercent;
-    unsigned long numPayments;
+    double numPayments;
     bool isSecured;
-    std::vector<double> payments;
+    double totalPayment = 0;
 
-    Loan(double amount, double rate, unsigned long numPay, bool secured);
+    Loan(double amount, double rate, double numPay, bool secured);
     ~Loan();
-    void calculatePayments();
+    void calculateTotalPayment();
     double calculateOverpayment();
 };
 //--
-Loan::Loan(double amount, double rate, unsigned long numPay, bool secured):
+Loan::Loan(double amount, double rate, double numPay, bool secured):
     loanAmount(amount), interestRateInPercent(rate), numPayments(numPay), isSecured(secured)
 {
     if(isSecured)
     {
         interestRateInPercent *= 0.9;
     }
-    calculatePayments();
+    calculateTotalPayment();
 }
 //--
 Loan::~Loan()
@@ -141,26 +139,24 @@ Loan::~Loan()
     std::cout << "Loan destructor called!" << std::endl;
 }
 //--
-void Loan::calculatePayments()
+void Loan::calculateTotalPayment()
 {
-    payments.clear();
-    for(unsigned int i = 0; i < numPayments; i++)
-        {
-            double currentLoanAmount = loanAmount;
-            double payment = currentLoanAmount * (interestRateInPercent / 12 / 100.0) + loanAmount / static_cast<double>(numPayments);
-            currentLoanAmount -= loanAmount / static_cast<double>(numPayments);
-            payments.push_back(payment);
-        }
+    double currentLoanAmount = loanAmount;
+    totalPayment = 0;
+    for(unsigned int i = 0; i < numPayments; ++i)
+    {
+        double interestPayment = currentLoanAmount * (interestRateInPercent / 12 / 100.0);
+        double principalPayment = loanAmount / numPayments;
+        double payment = interestPayment + principalPayment;
+
+        totalPayment += payment;
+        currentLoanAmount -= principalPayment;
+    }
 }
 //--
 double Loan::calculateOverpayment()
 {
-    double amountToPay = 0.0;
-    for(unsigned int i = 0; i < numPayments; i++)
-        {
-            amountToPay += payments[i];
-        }
-    return amountToPay - loanAmount;
+    return totalPayment - loanAmount;
 }
 //--
 struct Gym 
@@ -171,16 +167,17 @@ struct Gym
         static int memberId;
         int age;
         bool isActive = true;
-        std::vector<std::string> activityLog;
+        std::string lastActivity;
 
         Member(std::string n, int a);
         ~Member();
-        void logActivity(const std::string& activity);
+        void logActivity(std::string activity);
         void printDetails();
+        void setActiveStatus(bool active);
     };
 
-    std::vector<Member> members;
     std::string gymName;
+    std::string lastRegisteredMembersName;
     int totalMembers = 0;
     double membershipPrice = 30.0;
     double monthlyRevenue = 0.0;
@@ -188,7 +185,7 @@ struct Gym
 
     Gym(std::string name, bool open);
     ~Gym();
-    void registerMember(const Member& member);
+    void registerMember(Member member);
     void toggleGymStatus();
     void calculateRevenue();
 };
@@ -198,7 +195,7 @@ int Gym::Member::memberId = 0;
 Gym::Member::Member(std::string n, int a):
     name(n), age(a)
 {
-    memberId++;
+    ++memberId;
 }
 //--
 Gym::Member::~Member()
@@ -206,21 +203,30 @@ Gym::Member::~Member()
     std::cout << "Member destructor called!" << std::endl;
 }
 //--
-void Gym::Member::logActivity(const std::string& activity) 
+void Gym::Member::logActivity(std::string activity) 
 {
-    activityLog.push_back(activity);
+    lastActivity = activity;
 }
 //--
 void Gym::Member::printDetails()
 {
-    std::cout << "Member ID: " << memberId << ", Name: " << name << ", Age: " << age << ", Active: " << (isActive ? "Yes": "No") << std::endl;
-    std::cout << "Activities Logged: ";
-    for (const auto& act : activityLog) 
+    for(int i = 0; i < 20; ++i)
     {
-        std::cout << act << " ";
+        std::cout << "-";        
     }
-    std::cout << std::endl;
+    std::cout << "\nMember ID: " << memberId << ", Name: " << name << ", Age: " << age << ", Active: " << (isActive ? "Yes": "No") << std::endl;
+    for(int i = 0; i < 20; ++i)
+    {
+        std::cout << "-";        
+    }
+    std::cout << "\nLast activity: " << lastActivity << std::endl;
 }
+//--
+void Gym::Member::setActiveStatus(bool active)
+{
+    isActive = active;
+}
+//--
 Gym::Gym(std::string name, bool open) : 
     gymName(name), isOpen(open)
 {
@@ -231,10 +237,10 @@ Gym::~Gym()
     std::cout << "Gym destructor called!" << std::endl;
 }
 //--
-void Gym::registerMember(const Member& member) 
+void Gym::registerMember(Member member) 
 {
-    members.push_back(member);
-    totalMembers++;
+    lastRegisteredMembersName = member.name;
+    ++totalMembers;
 }
 //--
 void Gym::toggleGymStatus() 
@@ -244,39 +250,41 @@ void Gym::toggleGymStatus()
 //--
 void Gym::calculateRevenue() 
 {
-    monthlyRevenue = totalMembers * membershipPrice;
+    double maintenanceCost = 0.0;
+    for (int i = 0; i < totalMembers; ++i) 
+    {
+        maintenanceCost += 0.5 * i;  // Each member increases the maintenance cost by 0.5
+    }
+    monthlyRevenue = (totalMembers * membershipPrice) - maintenanceCost;
 }
 //--
 struct Classroom 
 {
-public:
     struct Student 
     {
         std::string name;
         static int studentId;
         int age;
-        std::vector<double> grades; //grades for 0 to 100
-        char finalGrade;
+        double averageGrade = 0; //grades for 0 to 100
+        char finalGrade = 'F';
 
         Student(std::string n, int a);
         ~Student();
-        void addGrade(double grade);
-        void printDetails() const;
-        double calculateAverageGrade() const;
+        void printDetails();
         void setFinalGrade();
+        void setAverageGrade(double grade);
     };
 
-    std::vector<Student> students;
+    std::string lastRegisteredStudentName;
     std::string classroomName;
     int totalStudents = 0;
-    double averageGrade = 0;
-    char averageLetterGrade;
+    double averageGradeLastYear;
+    char minimumLetterGradeToPass;
 
-    Classroom(std::string name);
+    Classroom(std::string name, double averGrade, char minGrade);
     ~Classroom();
-    void registerStudent(const Student& student);
+    void registerStudent(Student student);
     static char convertGradeIntoLetterGrade(double grade);
-    void calculateAverageGrade();
     void printClassDetails();
 };
 //--
@@ -284,7 +292,7 @@ int Classroom::Student::studentId = 0;
 //--
 Classroom::Student::Student(std::string n, int a) : name(n), age(a)
 {
-    studentId++;
+    ++studentId;
 }
 //--
 Classroom::Student::~Student()
@@ -292,42 +300,32 @@ Classroom::Student::~Student()
     std::cout << "Student destructor called!" << std::endl;
 }
 //--
-void Classroom::Student::addGrade(double grade) 
+void Classroom::Student::printDetails()
 {
-    grades.push_back(grade);
-}
-//--
-void Classroom::Student::printDetails() const
-{
-    std::cout << "Student ID: " << studentId << ", Name: " << name << ", Age: " << age << std::endl;
-    std::cout << "Grades: ";
-    for (double grade : grades) 
+    for(int i = 0; i < 20; ++i)
     {
-        std::cout << grade << " ";
+        std::cout << "-";        
     }
-    std::cout << "\nAverage Grade: " << calculateAverageGrade() << std::endl;
+    std::cout << "\nStudent ID: " << studentId << ", Name: " << name << ", Age: " << age << std::endl;
+    for(int i = 0; i < 20; ++i)
+    {
+        std::cout << "-";        
+    }
+    std::cout << "\nFinal Grade: " << finalGrade << std::endl;
 }
 //--
 void Classroom::Student::setFinalGrade()
 {
-    finalGrade = convertGradeIntoLetterGrade(Student::calculateAverageGrade());
+    finalGrade = convertGradeIntoLetterGrade(averageGrade);
 }
 //--
-double Classroom::Student::calculateAverageGrade() const{
-    if (grades.empty())
-    {
-        return 0.0;
-    }
-    double sum = 0.0;
-    for (double grade : grades) 
-    {
-        sum += grade;
-    }
-    return sum / static_cast<double>(grades.size());
+void Classroom::Student::setAverageGrade(double grade)
+{
+    averageGrade = grade;
 }
 //--
-Classroom::Classroom(std::string name) : 
-    classroomName(name)
+Classroom::Classroom(std::string name, double averGrade, char minGrade) : 
+    classroomName(name), averageGradeLastYear(averGrade), minimumLetterGradeToPass(minGrade)
 {
 }
 //--
@@ -336,35 +334,22 @@ Classroom::~Classroom()
     std::cout << "Classroom destructor called!" << std::endl;
 }
 //--
-void Classroom::registerStudent(const Student& student) 
+void Classroom::registerStudent(Student student) 
 {
-    students.push_back(student);
-    totalStudents++;
+    lastRegisteredStudentName = student.name;
+    ++totalStudents;
 }
 //--
-void Classroom::calculateAverageGrade()
+void Classroom::printClassDetails()
 {
-    if (totalStudents == 0)
+    for(int i = 0; i < 20; ++i)
     {
-        averageGrade = 0;
-        averageLetterGrade = 'F';
-        return;
+        std::cout << "-";        
     }
-    double sum = 0.0;
-    for (const auto& student : students)
+    std::cout << "\nClassroom: " << classroomName << ", Total Students: " << totalStudents << std::endl;
+    for(int i = 0; i < 20; ++i)
     {
-        sum += student.calculateAverageGrade();
-    }
-    averageGrade = sum / totalStudents;
-    averageLetterGrade = convertGradeIntoLetterGrade(averageGrade);
-}
-//--
-void Classroom::printClassDetails(){
-    std::cout << "Classroom: " << classroomName << ", Total Students: " << totalStudents << std::endl;
-    std::cout << "Class Average Grade: " << averageGrade << " (" << averageLetterGrade << ")" << std::endl;
-    for (const Student& student : students) 
-    {
-        student.printDetails();
+        std::cout << "-";        
     }
 }
 //--
@@ -374,7 +359,7 @@ char Classroom::convertGradeIntoLetterGrade(double grade)
     else if (grade >= 80) return 'B';
     else if (grade >= 70) return 'C';
     else if (grade >= 60) return 'D';
-    else return 'F';
+    return 'F';
 }
 //--
 struct RecreationCenter 
@@ -382,15 +367,15 @@ struct RecreationCenter
     Classroom academicClassroom;
     Gym fitnessGym;
 
-    RecreationCenter(const Classroom& classroom, const Gym& gym);
+    RecreationCenter(Classroom classroom, Gym gym);
     ~RecreationCenter();
 
-    double compareAverageAge() const; //returns difference between average age of students in academic classroom and average age of members in fitness gym
-    void listUniqueNames() const;
+    bool isLastRegisteredPersonSame();
+    void compareNumMembers();
 
 };
 //--
-RecreationCenter::RecreationCenter(const Classroom& classroom, const Gym& gym)
+RecreationCenter::RecreationCenter(Classroom classroom, Gym gym)
     : academicClassroom(classroom), fitnessGym(gym)
 {
     std::cout << "RecreationCenter constructor called!" << std::endl;
@@ -401,60 +386,35 @@ RecreationCenter::~RecreationCenter()
     std::cout << "RecreationCenter destructor called!" << std::endl;
 }
 //--
-double RecreationCenter::compareAverageAge() const 
+bool RecreationCenter::isLastRegisteredPersonSame()
 {
-    double classroomSum = 0;
-    int studentCount = 0;
-    for (const auto& student : academicClassroom.students) 
-    {
-        classroomSum += student.age;
-        studentCount++;
-    }
-
-    double gymSum = 0;
-    int memberCount = 0;
-    for (const auto& member : fitnessGym.members) 
-    {
-        gymSum += member.age;
-        memberCount++;
-    }
-
-    double classroomAverage = (studentCount > 0) ? classroomSum / studentCount : 0;
-    double gymAverage = (memberCount > 0) ? gymSum / memberCount : 0;
-
-    return classroomAverage - gymAverage;
+    return academicClassroom.lastRegisteredStudentName == fitnessGym.lastRegisteredMembersName;
 }
 //--
-void RecreationCenter::listUniqueNames() const 
+void RecreationCenter::compareNumMembers()
 {
-    std::unordered_set<std::string> uniqueNames;
-
-    for (const auto& student : academicClassroom.students) 
+    if (academicClassroom.totalStudents > fitnessGym.totalMembers)
     {
-        uniqueNames.insert(student.name);
+        std::cout << "There are more members in the academic classroom than the gym." << std::endl;
     }
-
-    for (const auto& member : fitnessGym.members) 
+    else if (academicClassroom.totalStudents > fitnessGym.totalMembers)
     {
-        uniqueNames.insert(member.name);
+        std::cout << "There are more members in the gym than the academic classroom." << std::endl;
     }
-
-    std::cout << "Unique Names in Recreation Center:" << std::endl;
-    for (const auto& name : uniqueNames) 
+    else
     {
-        std::cout << name << std::endl;
+        std::cout << "There are the same number of members in both the gym and the academic classrom." << std::endl;
     }
 }
 //--
 struct LoanManager 
 {
-    std::vector<Loan> loans;
-
+    double totalPayment = 0;
     LoanManager();
     ~LoanManager();
 
-    void addLoan(const Loan& loan);
-    double calculateTotalMonthlyPaymentForNumMonth(unsigned int num) const;
+    void addLoan(Loan loan);
+    void printTotalPayment();
 };
 //--
 LoanManager::LoanManager()
@@ -467,23 +427,14 @@ LoanManager::~LoanManager()
     std::cout << "LoanManager destructor called!" << std::endl;
 }
 //--
-void LoanManager::addLoan(const Loan& loan) 
+void LoanManager::addLoan(Loan loan) 
 {
-    loans.push_back(loan);
-    std::cout << "Loan added. Current number of loans: " << loans.size() << std::endl;
+    totalPayment += loan.totalPayment; 
 }
 //--
-double LoanManager::calculateTotalMonthlyPaymentForNumMonth(unsigned int num) const 
+void LoanManager::printTotalPayment() 
 {
-    double totalMonthlyPayment = 0.0;
-    for (const auto& loan : loans) 
-    {
-        if (!loan.payments.empty()) 
-        {
-            totalMonthlyPayment += loan.payments[num];
-        }
-    }
-    return totalMonthlyPayment;
+    std::cout << "Total payment: " << totalPayment << std::endl;
 }
 //--
 int main()
@@ -496,22 +447,24 @@ int main()
     manager.addLoan(Loan(500, 3, 12, false));
     manager.addLoan(Loan(1000, 4.5, 36, true));
 
-    std::cout << "Total Monthly Payment: $" << manager.calculateTotalMonthlyPaymentForNumMonth(0) << std::endl;
+    manager.printTotalPayment();
 
-    Classroom calculus("Calculus 101");
-    calculus.students.push_back(Classroom::Student("Alice", 20));
-    calculus.students.push_back(Classroom::Student("Bob", 22));
+    Classroom calculus("Calculus 101", 80, 'D');
+    calculus.registerStudent(Classroom::Student("Bob", 22));
+    calculus.registerStudent(Classroom::Student("Alice", 20));
 
     Gym campusGym("Campus Fitness Center", true);
-    campusGym.members.push_back(Gym::Member("Charlie", 25));
-    campusGym.members.push_back(Gym::Member("Alice", 20));
+    campusGym.registerMember(Gym::Member("Charlie", 25));
+    campusGym.registerMember(Gym::Member("Alice", 20));
 
     RecreationCenter center(calculus, campusGym);
 
-    double ageDifference = center.compareAverageAge();
-    std::cout << "Average age difference between classroom and gym: " << ageDifference << std::endl;
-
-    center.listUniqueNames();
+    if(center.isLastRegisteredPersonSame())
+    {
+        std::cout << "The last registered person is the same in both the academic classroom and the gym." << std::endl;
+    }
 
     
+    center.compareNumMembers();
+
 }
