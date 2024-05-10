@@ -429,7 +429,8 @@ int main()
 {
     std::cout << "good to go!" << std::endl;
 
-    /*LoanManager manager;
+    
+    LoanManager manager;
 
     manager.addLoan(Loan(2000, 5, 24, true));
     manager.addLoan(Loan(500, 3, 12, false));
@@ -453,7 +454,7 @@ int main()
     }
     
     center.compareNumMembers();
-    */
+    
     
     Loan l = Loan(5000, 6, 24, false);
     
