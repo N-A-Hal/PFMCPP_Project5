@@ -104,6 +104,7 @@ struct Loan
     ~Loan();
     void calculateTotalPayment();
     double calculateOverpayment();
+    void printOverpayment();
 };
 //--
 Loan::Loan(double amount, double rate, double numPay, bool secured):
@@ -139,6 +140,11 @@ void Loan::calculateTotalPayment()
 double Loan::calculateOverpayment()
 {
     return totalPayment - loanAmount;
+}
+//--
+void Loan::printOverpayment()
+{
+    std::cout << "Loan amount: " << this->loanAmount << "\nOverpayment: " << this->calculateOverpayment() << std::endl;
 }
 //--
 struct Gym 
@@ -423,6 +429,7 @@ int main()
 {
     std::cout << "good to go!" << std::endl;
 
+    
     LoanManager manager;
 
     manager.addLoan(Loan(2000, 5, 24, true));
@@ -445,8 +452,14 @@ int main()
     {
         std::cout << "The last registered person is the same in both the academic classroom and the gym." << std::endl;
     }
-
     
     center.compareNumMembers();
+    
+    
+    Loan l = Loan(5000, 6, 24, false);
+    
+    std::cout << "Loan amount: " << l.loanAmount << "\nOverpayment: " << l.calculateOverpayment() << std::endl;
+    
+    l.printOverpayment();
 
 }
