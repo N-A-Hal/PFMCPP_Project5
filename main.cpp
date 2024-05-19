@@ -95,6 +95,7 @@ void Axe::aConstMemberFunction() const { }
 
 #include <iostream>
 #include <string>
+#include "LeakedObjectDetector.h"
 
 struct Loan
 {
@@ -109,6 +110,8 @@ struct Loan
     void calculateTotalPayment();
     double calculateOverpayment();
     void printOverpayment();
+
+    JUCE_LEAK_DETECTOR(Loan)
 };
 //--
 Loan::Loan(double amount, double rate, double numPay, bool secured):
@@ -151,6 +154,17 @@ void Loan::printOverpayment()
     std::cout << "Loan amount: " << this->loanAmount << "\nOverpayment: " << this->calculateOverpayment() << std::endl;
 }
 //--
+struct LoanWrapper
+{
+    LoanWrapper( Loan* ptr ) : pointerToLoan( ptr ) {}
+    ~LoanWrapper()
+    {
+        delete pointerToLoan;
+    }
+
+    Loan* pointerToLoan = nullptr;
+};
+//--
 struct Gym 
 {
     struct Member 
@@ -164,8 +178,10 @@ struct Gym
         Member(std::string n, int a);
         ~Member();
         void logActivity(std::string activity);
-        void printDetails();
+        void printDetails() const;
         void setActiveStatus(bool active);
+
+        JUCE_LEAK_DETECTOR(Member)
     };
 
     std::string gymName;
@@ -177,9 +193,11 @@ struct Gym
 
     Gym(std::string name, bool open);
     ~Gym();
-    void registerMember(Member member);
+    void registerMember(const Member& member);
     void toggleGymStatus();
     void calculateRevenue();
+
+    JUCE_LEAK_DETECTOR(Gym)
 };
 //--
 int Gym::Member::memberId = 0;
@@ -200,7 +218,7 @@ void Gym::Member::logActivity(std::string activity)
     lastActivity = activity;
 }
 //--
-void Gym::Member::printDetails()
+void Gym::Member::printDetails() const
 {
     for(int i = 0; i < 20; ++i)
     {
@@ -229,7 +247,7 @@ Gym::~Gym()
     std::cout << "Gym destructor called!" << std::endl;
 }
 //--
-void Gym::registerMember(Member member) 
+void Gym::registerMember(const Member& member) 
 {
     lastRegisteredMembersName = member.name;
     ++totalMembers;
@@ -250,6 +268,28 @@ void Gym::calculateRevenue()
     monthlyRevenue = (totalMembers * membershipPrice) - maintenanceCost;
 }
 //--
+struct MemberWrapper
+{
+    MemberWrapper( Gym::Member* ptr ) : pointerToMember( ptr ) {}
+    ~MemberWrapper()
+    {
+        delete pointerToMember;
+    }
+
+    Gym::Member* pointerToMember = nullptr;
+};
+//--
+struct GymWrapper
+{
+    GymWrapper( Gym* ptr ) : pointerToGym( ptr ) {}
+    ~GymWrapper()
+    {
+        delete pointerToGym;
+    }
+
+    Gym* pointerToGym = nullptr;
+};
+//--
 struct Classroom 
 {
     struct Student 
@@ -262,9 +302,11 @@ struct Classroom
 
         Student(std::string n, int a);
         ~Student();
-        void printDetails();
+        void printDetails() const;
         void setFinalGrade();
         void setAverageGrade(double grade);
+
+        JUCE_LEAK_DETECTOR(Student)
     };
 
     std::string lastRegisteredStudentName;
@@ -275,9 +317,11 @@ struct Classroom
 
     Classroom(std::string name, double averGrade, char minGrade);
     ~Classroom();
-    void registerStudent(Student student);
+    void registerStudent(const Student& student);
     static char convertGradeIntoLetterGrade(double grade);
-    void printClassDetails();
+    void printClassDetails() const;
+
+    JUCE_LEAK_DETECTOR(Classroom)
 };
 //--
 int Classroom::Student::studentId = 0;
@@ -292,7 +336,7 @@ Classroom::Student::~Student()
     std::cout << "Student destructor called!" << std::endl;
 }
 //--
-void Classroom::Student::printDetails()
+void Classroom::Student::printDetails() const
 {
     for(int i = 0; i < 20; ++i)
     {
@@ -326,13 +370,13 @@ Classroom::~Classroom()
     std::cout << "Classroom destructor called!" << std::endl;
 }
 //--
-void Classroom::registerStudent(Student student) 
+void Classroom::registerStudent(const Student& student) 
 {
     lastRegisteredStudentName = student.name;
     ++totalStudents;
 }
 //--
-void Classroom::printClassDetails()
+void Classroom::printClassDetails() const
 {
     for(int i = 0; i < 20; ++i)
     {
@@ -354,20 +398,42 @@ char Classroom::convertGradeIntoLetterGrade(double grade)
     return 'F';
 }
 //--
+struct StudentWrapper
+{
+    StudentWrapper( Classroom::Student* ptr ) : pointerToStudent( ptr ) {}
+    ~StudentWrapper()
+    {
+        delete pointerToStudent;
+    }
+
+    Classroom::Student* pointerToStudent = nullptr;
+};
+//--
+struct ClassroomWrapper
+{
+    ClassroomWrapper( Classroom* ptr ) : pointerToClassroom( ptr ) {}
+    ~ClassroomWrapper()
+    {
+        delete pointerToClassroom;
+    }
+
+    Classroom* pointerToClassroom = nullptr;
+};
+//--
 struct RecreationCenter 
 {
     Classroom academicClassroom;
     Gym fitnessGym;
 
-    RecreationCenter(Classroom classroom, Gym gym);
+    RecreationCenter(const Classroom& classroom, const Gym& gym);
     ~RecreationCenter();
 
-    bool isLastRegisteredPersonSame();
-    void compareNumMembers();
+    bool isLastRegisteredPersonSame() const;
+    void compareNumMembers() const;
 
 };
 //--
-RecreationCenter::RecreationCenter(Classroom classroom, Gym gym)
+RecreationCenter::RecreationCenter(const Classroom& classroom, const Gym& gym)
     : academicClassroom(classroom), fitnessGym(gym)
 {
     std::cout << "RecreationCenter constructor called!" << std::endl;
@@ -378,12 +444,12 @@ RecreationCenter::~RecreationCenter()
     std::cout << "RecreationCenter destructor called!" << std::endl;
 }
 //--
-bool RecreationCenter::isLastRegisteredPersonSame()
+bool RecreationCenter::isLastRegisteredPersonSame() const
 {
     return academicClassroom.lastRegisteredStudentName == fitnessGym.lastRegisteredMembersName;
 }
 //--
-void RecreationCenter::compareNumMembers()
+void RecreationCenter::compareNumMembers() const
 {
     if (academicClassroom.totalStudents > fitnessGym.totalMembers)
     {
@@ -399,14 +465,25 @@ void RecreationCenter::compareNumMembers()
     }
 }
 //--
+struct RecreationCenterWrapper
+{
+    RecreationCenterWrapper( RecreationCenter* ptr ) : pointerToRecreationCenter( ptr ) {}
+    ~RecreationCenterWrapper()
+    {
+        delete pointerToRecreationCenter;
+    }
+
+    RecreationCenter* pointerToRecreationCenter = nullptr;
+};
+//--
 struct LoanManager 
 {
     double totalPayment = 0;
     LoanManager();
     ~LoanManager();
 
-    void addLoan(Loan loan);
-    void printTotalPayment();
+    void addLoan(const Loan& loan);
+    void printTotalPayment() const;
 };
 //--
 LoanManager::LoanManager()
@@ -419,51 +496,64 @@ LoanManager::~LoanManager()
     std::cout << "LoanManager destructor called!" << std::endl;
 }
 //--
-void LoanManager::addLoan(Loan loan) 
+void LoanManager::addLoan(const Loan& loan) 
 {
     totalPayment += loan.totalPayment; 
 }
 //--
-void LoanManager::printTotalPayment() 
+void LoanManager::printTotalPayment() const
 {
     std::cout << "Total payment: " << totalPayment << std::endl;
 }
+//--
+struct LoanManagerWrapper
+{
+    LoanManagerWrapper( LoanManager* ptr ) : pointerToLoanManager( ptr ) {}
+    ~LoanManagerWrapper()
+    {
+        delete pointerToLoanManager;
+    }
+
+    LoanManager* pointerToLoanManager = nullptr;
+};
 //--
 int main()
 {
     std::cout << "good to go!" << std::endl;
 
     
-    LoanManager manager;
+    LoanManagerWrapper manager(new LoanManager());
 
-    manager.addLoan(Loan(2000, 5, 24, true));
-    manager.addLoan(Loan(500, 3, 12, false));
-    manager.addLoan(Loan(1000, 4.5, 36, true));
+    manager.pointerToLoanManager->addLoan(Loan(2000, 5, 24, true));
+    manager.pointerToLoanManager->addLoan(Loan(500, 3, 12, false));
+    manager.pointerToLoanManager->addLoan(Loan(1000, 4.5, 36, true));
 
-    manager.printTotalPayment();
+    manager.pointerToLoanManager->printTotalPayment();
 
-    Classroom calculus("Calculus 101", 80, 'D');
-    calculus.registerStudent(Classroom::Student("Bob", 22));
-    calculus.registerStudent(Classroom::Student("Alice", 20));
+    ClassroomWrapper calculus(new Classroom("Calculus 101", 80, 'D'));
 
-    Gym campusGym("Campus Fitness Center", true);
-    campusGym.registerMember(Gym::Member("Charlie", 25));
-    campusGym.registerMember(Gym::Member("Alice", 20));
+    calculus.pointerToClassroom->registerStudent(Classroom::Student("Bob", 22));
+    calculus.pointerToClassroom->registerStudent(Classroom::Student("Alice", 20));
 
-    RecreationCenter center(calculus, campusGym);
+    GymWrapper campusGym(new Gym("Campus Fitness Center", true));
+    
+    campusGym.pointerToGym->registerMember(Gym::Member("Charlie", 25));
+    campusGym.pointerToGym->registerMember(Gym::Member("Alice", 20));
 
-    if(center.isLastRegisteredPersonSame())
+    RecreationCenterWrapper center(new RecreationCenter(*calculus.pointerToClassroom, *campusGym.pointerToGym));
+
+    if(center.pointerToRecreationCenter->isLastRegisteredPersonSame())
     {
         std::cout << "The last registered person is the same in both the academic classroom and the gym." << std::endl;
     }
     
-    center.compareNumMembers();
+    center.pointerToRecreationCenter->compareNumMembers();
     
+
+    LoanWrapper l(new Loan(5000, 6, 24, false));
     
-    Loan l = Loan(5000, 6, 24, false);
+    std::cout << "Loan amount: " << l.pointerToLoan->loanAmount << "\nOverpayment: " << l.pointerToLoan->calculateOverpayment() << std::endl;
     
-    std::cout << "Loan amount: " << l.loanAmount << "\nOverpayment: " << l.calculateOverpayment() << std::endl;
-    
-    l.printOverpayment();
+    l.pointerToLoan->printOverpayment();
 
 }
