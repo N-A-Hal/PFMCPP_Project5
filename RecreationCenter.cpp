@@ -1,5 +1,3 @@
-#pragma once
-
 #include "RecreationCenter.h"
 
 RecreationCenter::RecreationCenter(const Classroom& classroom, const Gym& gym)

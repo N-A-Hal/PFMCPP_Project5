@@ -1,5 +1,3 @@
-#pragma once
-
 #include "LoanManager.h"
 
 LoanManager::LoanManager()

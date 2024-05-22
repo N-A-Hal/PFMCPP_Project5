@@ -1,5 +1,3 @@
-#pragma once
-
 #include "LoanManagerWrapper.h"
 
 

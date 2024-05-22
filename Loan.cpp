@@ -1,5 +1,3 @@
-#pragma once
-
 #include "LeakedObjectDetector.h"
 #include "Loan.h"
 

@@ -1,5 +1,3 @@
-#pragma once
-
 #include "ClassroomWrapper.h"
 
 ClassroomWrapper::ClassroomWrapper( Classroom* ptr ) : pointerToClassroom( ptr ) 

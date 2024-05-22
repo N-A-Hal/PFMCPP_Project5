@@ -1,5 +1,3 @@
-#pragma once
-
 #include "Classroom.h"
 
 int Classroom::Student::studentId = 0;
