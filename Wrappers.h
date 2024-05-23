@@ -1,10 +1,12 @@
 #pragma once
 
 #include "Classroom.h"
-#include "RecreationCenter.h"
 #include "Gym.h"
-#include "Loan.h"
-#include "LoanManager.h"
+
+struct RecreationCenter;
+struct Gym;
+struct Loan;
+struct LoanManager;
 
 struct StudentWrapper
 {

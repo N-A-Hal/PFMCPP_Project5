@@ -1,4 +1,7 @@
 #include "Wrappers.h"
+#include "RecreationCenter.h"
+#include "Loan.h"
+#include "LoanManager.h"
 
 StudentWrapper::StudentWrapper( Classroom::Student* ptr ) : pointerToStudent( ptr ) 
 {
