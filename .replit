@@ -1,5 +1,5 @@
 language = "cpp"
-run = "clang++ -std=c++17 -Wno-deprecated -Wno-padded -Weverything -Wno-c++98-compat -Wno-exit-time-destructors -Wno-missing-prototypes main.cpp Classroom.cpp ClassroomWrapper.cpp Gym.cpp GymWrapper.cpp Loan.cpp LoanManager.cpp LoanManagerWrapper.cpp LoanWrapper.cpp MemberWrapper.cpp RecreationCenter.cpp RecreationCenterWrapper.cpp StudentWrapper.cpp && ./a.out"
+run = "clang++ -std=c++17 -Wno-deprecated -Wno-padded -Weverything -Wno-c++98-compat -Wno-exit-time-destructors -Wno-missing-prototypes main.cpp Classroom.cpp Gym.cpp Loan.cpp LoanManager.cpp RecreationCenter.cpp Wrappers.cpp  && ./a.out"
 hidden = ["ccls"]
 entrypoint = "main.cpp"
 

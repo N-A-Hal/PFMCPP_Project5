@@ -83,11 +83,7 @@ void Axe::aConstMemberFunction() const { }
 #include <iostream>
 #include <string>
 #include "LeakedObjectDetector.h"
-#include "LoanManagerWrapper.h"
-#include "ClassroomWrapper.h"
-#include "GymWrapper.h"
-#include "RecreationCenterWrapper.h"
-#include "LoanWrapper.h"
+#include "Wrappers.h"
 
 //--
 int main()
